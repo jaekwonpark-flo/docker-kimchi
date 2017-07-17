@@ -11,27 +11,13 @@ RUN apt-get -y update && C_ALL=C DEBIAN_FRONTEND=noninteractive apt-get -y insta
     python-ethtool sosreport python-ipaddr \
     python-lxml open-iscsi python-guestfs \
     libguestfs-tools spice-html5 python-magic \
-    python-paramiko python-imaging \
-    apt-get clean && \
-    rm -r /var/lib/apt/lists/*
+    python-paramiko python-imaging wget
 
-RUN ./autogen.sh --system ; make; make install
 
-# Configure apache module
-RUN chown -R www-data:www-data /var/www/html/
-RUN a2dismod mpm_event && \
-    a2enmod mpm_prefork cgid access_compat rewrite && \
-    ln -sf /dev/stdout /var/log/apache2/access.log && \
-    ln -sf /dev/stderr /var/log/apache2/error.log
+RUN curl -L "http://kimchi-project.github.io/wok/downloads/latest/wok.noarch.deb" -o /tmp/wok.noarch.deb; apt-get install -y /tmp/wok.noarch.deb
+RUN curl -L "http://kimchi-project.github.io/kimchi/downloads/latest/kimchi.noarch.deb" -o /tmp/kimchi.noarch.deb; apt-get install -y /tmp/kimchi.noarch.deb
 
-COPY foswiki.conf /etc/apache2/sites-available/
+RUN apt-get clean && rm -r /var/lib/apt/lists/*
 
-RUN a2ensite foswiki.conf && \
-    a2dissite 000-default.conf
-
-COPY apache2-foreground /usr/local/bin/
-
-EXPOSE 80
-WORKDIR /var/www/html
-
-CMD ["apache2-foreground"]
+EXPOSE 8001
+CMD ["/usr/bin/wokd"]
